@@ -119,27 +119,44 @@ function endWriteStream(stream) {
 }
 
 const configuredHostingOrigins = new Set(
-  [process.env.RENDER_EXTERNAL_URL, ...(process.env.AUDIORIP_ALLOWED_ORIGINS ?? "").split(",")]
-    .flatMap((value) => {
-      try {
-        const parsed = new URL(value?.trim() ?? "");
-        return parsed.protocol === "https:" ? [parsed.origin] : [];
-      } catch {
-        return [];
-      }
-    }),
+  [
+    process.env.RENDER_EXTERNAL_URL,
+    ...(process.env.AUDIORIP_ALLOWED_ORIGINS ?? "").split(","),
+  ].flatMap((value) => {
+    try {
+      const parsed = new URL(value?.trim() ?? "");
+      return parsed.protocol === "https:" ? [parsed.origin] : [];
+    } catch {
+      return [];
+    }
+  } ),
 );
 
 function isAllowedOrigin(origin) {
   if (typeof origin !== "string") return false;
+
   try {
     const parsed = new URL(origin);
-    if (parsed.protocol === "https:" && configuredHostingOrigins.has(parsed.origin)) return true;
+
+    if (
+      parsed.protocol === "https:" &&
+      configuredHostingOrigins.has(parsed.origin )
+    ) {
+      return true;
+    }
+
     if (["localhost", "127.0.0.1"].includes(parsed.hostname)) {
       return parsed.protocol === "http:" || parsed.protocol === "https:";
     }
-    return parsed.protocol === "https:"
-      && ["manus.space", "manus.computer"].some((domain) => parsed.hostname === domain || parsed.hostname.endsWith(`.${domain}`));
+
+    return (
+      parsed.protocol === "https:" &&
+      ["manus.space", "manus.computer"].some(
+        (domain ) =>
+          parsed.hostname === domain ||
+          parsed.hostname.endsWith(`.${domain}`),
+      )
+    );
   } catch {
     return false;
   }
